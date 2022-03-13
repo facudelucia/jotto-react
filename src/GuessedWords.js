@@ -23,8 +23,8 @@ const GuessedWords = props => {
         contents = (
             <div data-test="guessed-words">
                 <h3></h3>
-                <table>
-                    <thead>
+                <table className='table table-sm'>
+                    <thead className='thead-light'>
                         <tr><th>Guess</th><th>Matching Letters</th></tr>
                     </thead>
                     <tbody>
