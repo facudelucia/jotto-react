@@ -1,20 +1,25 @@
 import React, { useState } from 'react';
-import { shallow } from 'enzyme'
+import { shallow, mount } from 'enzyme'
 import Input from './Input'
-import { findByTestAttr, checkProps } from '../test/testUtils'
+import { findByTestAttr, checkProps, storeFactory } from '../test/testUtils'
+import { Provider } from 'react-redux';
 
 
 
-
-const setup = (success = false, secretWord = 'party') => {
-    return shallow(<Input success={success} secretWord={secretWord} />)
+const setup = (initialState = {}, secretWord = 'party') => {
+    const store = storeFactory(initialState)
+    return mount(
+        <Provider store={store}>
+            <Input secretWord={secretWord} />
+        </Provider>
+    )
 }
 
 describe('render', () => {
     describe('success is true', () => {
         let wrapper
         beforeEach(() => {
-            wrapper = setup(true)
+            wrapper = setup({ success: true })
         })
         test('renders without error', () => {
             const inputComponent = findByTestAttr(wrapper, 'component-input')
@@ -32,7 +37,7 @@ describe('render', () => {
     describe('success is false', () => {
         let wrapper
         beforeEach(() => {
-            wrapper = setup(false)
+            wrapper = setup({ success: false })
         })
         test('renders without error', () => {
             const inputComponent = findByTestAttr(wrapper, 'component-input')
@@ -64,7 +69,7 @@ describe('state controlled input field', () => {
         mockSetCurrentGuess.mockClear()
         originalUseState = React.useState
         React.useState = jest.fn(() => ['', mockSetCurrentGuess])
-        wrapper = setup()
+        wrapper = setup({ success: false })
     })
     afterEach(() => {
         React.useState = originalUseState
