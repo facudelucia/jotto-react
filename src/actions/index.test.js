@@ -1,5 +1,4 @@
 import moxios from 'moxios'
-import { storeFactory } from '../../test/testUtils'
 import { getSecretWord } from './'
 
 describe('getSecretWord', () => {
@@ -9,8 +8,7 @@ describe('getSecretWord', () => {
     afterEach(() => {
         moxios.uninstall()
     })
-    test('secretWord is returned', () => {
-        const store = storeFactory()
+    test('secretWord is returned', async () => {
         moxios.wait(() => {
             const request = moxios.requests.mostRecent()
             request.respondWith({
@@ -18,10 +16,8 @@ describe('getSecretWord', () => {
                 response: 'party'
             })
         })
-        return store.dispatch(getSecretWord())
-            .then(() => {
-                const secretWord = store.getState().secretWord
-                expect(secretWord).toBe('party')
-            })
+        const mockSetSecretWord = jest.fn()
+        await getSecretWord(mockSetSecretWord)
+        expect(mockSetSecretWord).toHaveBeenCalledWith('party')
     })
 })

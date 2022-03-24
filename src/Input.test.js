@@ -1,39 +1,32 @@
 import React, { useState } from 'react';
 import { shallow, mount } from 'enzyme'
 import Input from './Input'
-import { findByTestAttr, checkProps, storeFactory } from '../test/testUtils'
-import { Provider } from 'react-redux';
+import { findByTestAttr } from '../test/testUtils'
+import languageContext from './contexts/languageContext';
+import successContext from './contexts/successContext';
+import guessedWordsContext from './contexts/guessedWordsContext';
 
 
 
-const setup = (initialState = {}, secretWord = 'party') => {
-    const store = storeFactory(initialState)
+const setup = ({ language, secretWord, success }) => {
+
+    language = language || 'en';
+    secretWord = secretWord || 'party';
+    success = success || false;
+
     return mount(
-        <Provider store={store}>
-            <Input secretWord={secretWord} />
-        </Provider>
-    )
+        <languageContext.Provider value={language}>
+            <successContext.SuccessProvider value={[success, jest.fn()]}>
+                <guessedWordsContext.GuessedWordsProvider>
+                    <Input secretWord={secretWord} />
+                </guessedWordsContext.GuessedWordsProvider>
+            </successContext.SuccessProvider>
+        </languageContext.Provider>
+    );
 }
 
 describe('render', () => {
-    describe('success is true', () => {
-        let wrapper
-        beforeEach(() => {
-            wrapper = setup({ success: true })
-        })
-        test('renders without error', () => {
-            const inputComponent = findByTestAttr(wrapper, 'component-input')
-            expect(inputComponent.length).toBe(1)
-        })
-        test('input box does not show', () => {
-            const inputBox = findByTestAttr(wrapper, 'input-box')
-            expect(inputBox.exists()).toBe(false)
-        })
-        test('submit button does not show', () => {
-            const submitButton = findByTestAttr(wrapper, 'submit-button')
-            expect(submitButton.exists()).toBe(false)
-        })
-    })
+
     describe('success is false', () => {
         let wrapper
         beforeEach(() => {
@@ -52,12 +45,26 @@ describe('render', () => {
             expect(submitButton.exists()).toBe(true)
         })
     })
-})
 
+    describe('success is true', () => {
+        let wrapper
+        beforeEach(() => {
+            wrapper = setup({ success: true })
+        })
+        test('renders without error', () => {
+            const inputComponent = findByTestAttr(wrapper, 'component-input')
+            expect(inputComponent.length).toBe(1)
+        })
+        test('input box does not show', () => {
+            const inputBox = findByTestAttr(wrapper, 'input-box')
+            expect(inputBox.exists()).toBe(false)
+        })
+        test('submit button does not show', () => {
+            const submitButton = findByTestAttr(wrapper, 'submit-button')
+            expect(submitButton.exists()).toBe(false)
+        })
+    })
 
-
-test('does not throw error with expected props', () => {
-    checkProps(Input, { secretWord: 'party' })
 })
 
 
@@ -69,7 +76,7 @@ describe('state controlled input field', () => {
         mockSetCurrentGuess.mockClear()
         originalUseState = React.useState
         React.useState = jest.fn(() => ['', mockSetCurrentGuess])
-        wrapper = setup({ success: false })
+        wrapper = setup({})
     })
     afterEach(() => {
         React.useState = originalUseState
@@ -94,3 +101,16 @@ describe('state controlled input field', () => {
     })
 
 })
+
+describe('languagePicker', () => {
+    test('correctly renders submit string in english', () => {
+        const wrapper = setup({ language: "en" });
+        const submitButton = findByTestAttr(wrapper, 'submit-button');
+        expect(submitButton.text()).toBe('Submit');
+    });
+    test('correctly renders congrats string in emoji', () => {
+        const wrapper = setup({ language: "emoji" });
+        const submitButton = findByTestAttr(wrapper, 'submit-button');
+        expect(submitButton.text()).toBe('🚀');
+    });
+});

@@ -1,22 +1,46 @@
-import { mount, shallow } from 'enzyme';
-import { findByTestAttr, storeFactory } from '../test/testUtils'
+import { mount } from 'enzyme';
+import { findByTestAttr } from '../test/testUtils'
 import App from './App';
 
 jest.mock('./actions')
 import { getSecretWord as mockGetSecretWord } from './actions';
-import { Provider } from 'react-redux';
+import React from 'react';
 
 const setup = () => {
   // use mount because useEffect not called on 'shallow'
-  const store = storeFactory()
-  return mount(<Provider store={store}><App /></Provider>)
+  return mount(<App />)
 }
 
-test('renders without error', () => {
-  const wrapper = setup()
-  const appComponent = findByTestAttr(wrapper, 'component-app')
-  expect(appComponent).toHaveLength(1)
-});
+describe.each([
+  [null, true, false],
+  ['party', false, true]
+])(
+  'renders with secretWord as %s', (secretWord, loadingShows, appShows) => {
+    let wrapper
+    let originalUseReducer
+    beforeEach(() => {
+      originalUseReducer = React.useReducer
+      const mockUseReducer = jest.fn()
+        .mockReturnValue([
+          { secretWord, language: 'en' },
+          jest.fn()
+        ])
+      React.useReducer = mockUseReducer
+      wrapper = setup()
+    })
+    afterEach(() => {
+      React.useReducer = originalUseReducer
+    })
+    test(`renders loading spinner: ${loadingShows}`, () => {
+      const spinnerComponent = findByTestAttr(wrapper, 'spinner')
+      expect(spinnerComponent.exists()).toBe(loadingShows)
+    })
+    test(`renders app: ${appShows}`, () => {
+      const appComponent = findByTestAttr(wrapper, 'component-app')
+      expect(appComponent.exists()).toBe(appShows)
+    })
+  }
+)
 
 describe('get secret word', () => {
   beforeEach(() => {
